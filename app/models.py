@@ -73,11 +73,17 @@ class InsightRequest(BaseModel):
     )
 
 
+class GraphData(BaseModel):
+    nodes: list = Field(description="Nodos del grafo")
+    edges: list = Field(description="Relaciones del grafo")
+
+
 class Reference(BaseModel):
     id: int = Field(description="Número de referencia en el texto")
     title: str = Field(description="Título del paper")
     link: Optional[str] = Field(description="URL del paper")
     certainty: Optional[float] = Field(description="Relevancia del paper (0-1)")
+    graph: Optional[GraphData] = Field(default=None, description="Datos del grafo del paper")
 
 
 class InsightResponse(BaseModel):

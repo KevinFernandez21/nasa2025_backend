@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import Settings, get_settings
 from app.dependencies import get_document_service, shutdown_document_service
 from app.models import (
+    GraphData,
     GraphRequest,
     GraphResponse,
     InsightRequest,
@@ -188,6 +189,31 @@ async def generate_insights(
             papers=papers,
             max_papers=payload.limit,
         )
+
+        # Agregar datos del grafo a cada referencia
+        for ref in references:
+            if ref.link:
+                try:
+                    with driver.session() as session:
+                        result = session.run(neo_query, source=ref.link)
+                        graph = result.graph()
+                        ref.graph = GraphData(
+                            nodes=[{
+                                "id": node.id,
+                                "labels": list(node.labels),
+                                "properties": dict(node)
+                            } for node in graph.nodes],
+                            edges=[{
+                                "id": rel.id,
+                                "type": rel.type,
+                                "start_node": rel.start_node.id,
+                                "end_node": rel.end_node.id,
+                                "properties": dict(rel)
+                            } for rel in graph.relationships]
+                        )
+                except Exception as graph_exc:
+                    logger.warning(f"No se pudo obtener grafo para {ref.link}: {graph_exc}")
+                    ref.graph = None
 
         # Determinar qué modelo se usó
         source = "openai" if settings.openai_api_key else "fallback"
