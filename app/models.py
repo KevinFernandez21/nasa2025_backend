@@ -73,7 +73,15 @@ class InsightRequest(BaseModel):
     )
 
 
+class Reference(BaseModel):
+    id: int = Field(description="Número de referencia en el texto")
+    title: str = Field(description="Título del paper")
+    link: Optional[str] = Field(description="URL del paper")
+    certainty: Optional[float] = Field(description="Relevancia del paper (0-1)")
+
+
 class InsightResponse(BaseModel):
-    insight: str = Field(description="Insight consolidado generado por el LLM")
+    insight: str = Field(description="Insight consolidado con referencias numeradas [1], [2], etc.")
+    references: list[Reference] = Field(description="Lista de referencias citadas en el insight")
     papers_analyzed: int = Field(description="Número de papers analizados")
     source: str = Field(description="Modelo usado para generar el insight")

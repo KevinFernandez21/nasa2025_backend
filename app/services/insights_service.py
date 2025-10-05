@@ -7,7 +7,7 @@ from typing import Optional
 
 from openai import OpenAI
 
-from app.models import DocumentHit
+from app.models import DocumentHit, Reference
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class InsightsService:
         query: str,
         papers: list[DocumentHit],
         max_papers: int = 5,
-    ) -> str:
+    ) -> tuple[str, list[Reference]]:
         """
         Genera un insight consolidado basado en los papers con mayor coincidencia.
 
@@ -44,7 +44,7 @@ class InsightsService:
             max_papers: Número máximo de papers a considerar
 
         Returns:
-            Un insight consolidado como string
+            Tupla con (insight_text, lista_de_referencias)
         """
         if not self._client:
             return self._generate_fallback_insight(query, papers, max_papers)
@@ -53,10 +53,13 @@ class InsightsService:
         top_papers = papers[:max_papers]
 
         if not top_papers:
-            return "No se encontraron papers relevantes para generar un insight."
+            return "No se encontraron papers relevantes para generar un insight.", []
+
+        # Crear lista de referencias
+        references = self._build_references(top_papers)
 
         # Construir el prompt con información de los papers
-        papers_context = self._build_papers_context(top_papers)
+        papers_context = self._build_papers_context_with_numbers(top_papers)
 
         prompt = f"""Eres un experto científico analizando literatura académica.
 
@@ -72,8 +75,11 @@ Tu tarea es generar un insight consolidado que:
 3. Señale las áreas de convergencia o divergencia en la investigación
 4. Sea conciso pero informativo (máximo 250 palabras)
 5. Use un tono académico pero accesible
+6. **IMPORTANTE**: Usa referencias numeradas [1], [2], [3], etc. cuando menciones información específica de un paper
 
-Genera el insight:"""
+Ejemplo: "Los estudios recientes muestran que... [1]. Además, se ha observado... [2][3]."
+
+Genera el insight con referencias:"""
 
         try:
             response = self._client.chat.completions.create(
@@ -81,16 +87,17 @@ Genera el insight:"""
                 messages=[
                     {
                         "role": "system",
-                        "content": "Eres un experto científico que sintetiza información de múltiples papers académicos.",
+                        "content": "Eres un experto científico que sintetiza información de múltiples papers académicos usando referencias numeradas.",
                     },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.4,
-                max_tokens=500,
+                max_tokens=600,
             )
 
             if response.choices and response.choices[0].message.content:
-                return response.choices[0].message.content.strip()
+                insight_text = response.choices[0].message.content.strip()
+                return insight_text, references
             else:
                 logger.warning("OpenAI no devolvió contenido válido")
                 return self._generate_fallback_insight(query, top_papers, max_papers)
@@ -100,8 +107,42 @@ Genera el insight:"""
             return self._generate_fallback_insight(query, top_papers, max_papers)
 
     @staticmethod
+    def _build_references(papers: list[DocumentHit]) -> list[Reference]:
+        """Construye la lista de referencias numeradas."""
+        references = []
+        for idx, paper in enumerate(papers, 1):
+            references.append(
+                Reference(
+                    id=idx,
+                    title=paper.title,
+                    link=paper.link,
+                    certainty=paper.certainty,
+                )
+            )
+        return references
+
+    @staticmethod
+    def _build_papers_context_with_numbers(papers: list[DocumentHit]) -> str:
+        """Construye el contexto de papers con numeración para el prompt."""
+        context_parts = []
+
+        for idx, paper in enumerate(papers, 1):
+            certainty_str = f"{paper.certainty:.2%}" if paper.certainty else "N/A"
+
+            # Usar abstract si está disponible, sino content_preview
+            content = paper.full_abstract if paper.full_abstract else paper.content_preview
+
+            paper_text = f"""[{idx}] {paper.title}
+Relevancia: {certainty_str}
+Resumen: {content[:500]}...
+"""
+            context_parts.append(paper_text)
+
+        return "\n".join(context_parts)
+
+    @staticmethod
     def _build_papers_context(papers: list[DocumentHit]) -> str:
-        """Construye el contexto de papers para el prompt."""
+        """Construye el contexto de papers para el prompt (legacy)."""
         context_parts = []
 
         for idx, paper in enumerate(papers, 1):
@@ -124,21 +165,31 @@ Resumen: {content[:500]}...
         query: str,
         papers: list[DocumentHit],
         max_papers: int,
-    ) -> str:
+    ) -> tuple[str, list[Reference]]:
         """Genera un insight básico sin usar OpenAI."""
         top_papers = papers[:max_papers]
 
         if not top_papers:
-            return "No se encontraron papers relevantes para la búsqueda."
+            return "No se encontraron papers relevantes para la búsqueda.", []
 
-        # Extraer títulos
-        titles = [p.title for p in top_papers if p.title]
+        # Crear referencias
+        references = []
+        for idx, paper in enumerate(top_papers, 1):
+            references.append(
+                Reference(
+                    id=idx,
+                    title=paper.title,
+                    link=paper.link,
+                    certainty=paper.certainty,
+                )
+            )
 
+        # Generar insight con referencias
         insight = f"Se encontraron {len(top_papers)} papers relevantes para '{query}'.\n\n"
         insight += "Principales trabajos:\n"
 
         for idx, paper in enumerate(top_papers, 1):
             certainty_str = f" (relevancia: {paper.certainty:.2%})" if paper.certainty else ""
-            insight += f"{idx}. {paper.title}{certainty_str}\n"
+            insight += f"[{idx}] {paper.title}{certainty_str}\n"
 
-        return insight
+        return insight, references

@@ -15,6 +15,7 @@ from app.models import (
     GraphResponse,
     InsightRequest,
     InsightResponse,
+    Reference,
     SearchRequest,
     SearchResponse,
     TitleRequest,
@@ -148,8 +149,8 @@ async def generate_insights(
         # Crear el servicio de insights
         insights_service = InsightsService(openai_api_key=settings.openai_api_key)
 
-        # Generar el insight
-        insight_text = insights_service.generate_insight(
+        # Generar el insight con referencias
+        insight_text, references = insights_service.generate_insight(
             query=payload.query,
             papers=papers,
             max_papers=payload.limit,
@@ -160,6 +161,7 @@ async def generate_insights(
 
         return InsightResponse(
             insight=insight_text,
+            references=references,
             papers_analyzed=len(papers),
             source=source,
         )
