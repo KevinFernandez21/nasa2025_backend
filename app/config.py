@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     weaviate_api_key: str = Field(..., alias="WEAVIATE_API_KEY")
     cohere_api_key: str | None = Field(default=None, alias="COHERE_API_KEY")
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     collection_name: str = Field(default="ScientificPapersFullContent", alias="COLLECTION_NAME")
     use_cloud: bool = Field(default=True, alias="USE_CLOUD")
     request_timeout_seconds: int = Field(default=30, alias="REQUEST_TIMEOUT_SECONDS")

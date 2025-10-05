@@ -62,3 +62,18 @@ class GraphResponse(BaseModel):
     nodes: list[GraphNode]
     relationships: list[GraphRelationship]
     count: dict[str, int]
+
+
+class InsightRequest(BaseModel):
+    query: str = Field(..., min_length=3, description="Consulta original de búsqueda")
+    limit: int = Field(default=5, ge=1, le=20, description="Número máximo de papers a analizar")
+    only_full_content: bool = Field(
+        default=True,
+        description="Filtrar únicamente documentos con contenido completo",
+    )
+
+
+class InsightResponse(BaseModel):
+    insight: str = Field(description="Insight consolidado generado por el LLM")
+    papers_analyzed: int = Field(description="Número de papers analizados")
+    source: str = Field(description="Modelo usado para generar el insight")

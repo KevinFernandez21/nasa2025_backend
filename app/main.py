@@ -13,12 +13,15 @@ from app.dependencies import get_document_service, shutdown_document_service
 from app.models import (
     GraphRequest,
     GraphResponse,
+    InsightRequest,
+    InsightResponse,
     SearchRequest,
     SearchResponse,
     TitleRequest,
     TitleResponse,
 )
 from app.services.document_service import DocumentService
+from app.services.insights_service import InsightsService
 from app.services.neo4j_service import Neo4jService
 
 logger = logging.getLogger(__name__)
@@ -118,3 +121,51 @@ async def get_graph(
     finally:
         if neo4j_service:
             neo4j_service.close()
+
+
+@app.post("/search/insights", response_model=InsightResponse)
+async def generate_insights(
+    payload: InsightRequest,
+    document_service: DocumentService = Depends(get_document_service),
+    settings: Settings = Depends(get_settings),
+) -> InsightResponse:
+    """Genera un insight consolidado de los papers más relevantes para una búsqueda."""
+
+    try:
+        # Primero, buscar los papers más relevantes
+        papers = document_service.search_documents(
+            query=payload.query,
+            limit=payload.limit,
+            only_full_content=payload.only_full_content,
+        )
+
+        if not papers:
+            raise HTTPException(
+                status_code=404,
+                detail="No se encontraron papers relevantes para la búsqueda",
+            )
+
+        # Crear el servicio de insights
+        insights_service = InsightsService(openai_api_key=settings.openai_api_key)
+
+        # Generar el insight
+        insight_text = insights_service.generate_insight(
+            query=payload.query,
+            papers=papers,
+            max_papers=payload.limit,
+        )
+
+        # Determinar qué modelo se usó
+        source = "openai" if settings.openai_api_key else "fallback"
+
+        return InsightResponse(
+            insight=insight_text,
+            papers_analyzed=len(papers),
+            source=source,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Error generando insights")
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
