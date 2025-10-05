@@ -61,25 +61,25 @@ class InsightsService:
         # Construir el prompt con información de los papers
         papers_context = self._build_papers_context_with_numbers(top_papers)
 
-        prompt = f"""Eres un experto científico analizando literatura académica.
+        prompt = f"""You are a scientific expert analyzing academic literature.
 
-Búsqueda del usuario: "{query}"
+User search query: "{query}"
 
-A continuación se presentan los {len(top_papers)} papers más relevantes encontrados:
+Below are the {len(top_papers)} most relevant papers found:
 
 {papers_context}
 
-Tu tarea es generar un insight consolidado que:
-1. Identifique los temas y hallazgos principales comunes entre estos papers
-2. Destaque las tendencias o patrones emergentes
-3. Señale las áreas de convergencia o divergencia en la investigación
-4. Sea conciso pero informativo (máximo 250 palabras)
-5. Use un tono académico pero accesible
-6. **IMPORTANTE**: Usa referencias numeradas [1], [2], [3], etc. cuando menciones información específica de un paper
+Your task is to generate a consolidated insight that:
+1. Identifies the main themes and findings common among these papers
+2. Highlights emerging trends or patterns
+3. Points out areas of convergence or divergence in the research
+4. Is concise but informative (maximum 250 words)
+5. Uses an academic but accessible tone
+6. **IMPORTANT**: Use numbered references [1], [2], [3], etc. when mentioning specific information from a paper
 
-Ejemplo: "Los estudios recientes muestran que... [1]. Además, se ha observado... [2][3]."
+Example: "Recent studies show that... [1]. Additionally, it has been observed... [2][3]."
 
-Genera el insight con referencias:"""
+Generate the insight with references:"""
 
         try:
             response = self._client.chat.completions.create(
@@ -87,7 +87,7 @@ Genera el insight con referencias:"""
                 messages=[
                     {
                         "role": "system",
-                        "content": "Eres un experto científico que sintetiza información de múltiples papers académicos usando referencias numeradas.",
+                        "content": "You are a scientific expert who synthesizes information from multiple academic papers using numbered references.",
                     },
                     {"role": "user", "content": prompt},
                 ],
