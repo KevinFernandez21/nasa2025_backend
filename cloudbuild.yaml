@@ -23,9 +23,9 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'WEAVIATE_URL=https://nsac25-5g0ufczj.weaviate.network,COLLECTION_NAME=ScientificPapersFullContent,USE_CLOUD=true,NEO4J_URI=neo4j+s://e8421c26.databases.neo4j.io,NEO4J_USERNAME=neo4j,NEO4J_DATABASE=neo4j'
+      - 'WEAVIATE_URL=https://nsac25-5g0ufczj.weaviate.network,COLLECTION_NAME=ScientificPapersFullContent,USE_CLOUD=true,NEO_URL=neo4j+s://509649ee.databases.neo4j.io,NEO_USER=neo4j,NEO4J_DATABASE=neo4j'
       - '--set-secrets'
-      - 'WEAVIATE_API_KEY=weaviate-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,NEO4J_PASSWORD=neo4j-password:latest'
+      - 'WEAVIATE_API_KEY=weaviate-api-key:latest,OPENAI_API_KEY=openai-api-key:latest,NEO_PASS=neo4j-password:latest,CLAUDE_KEY=claude-api-key:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/nasa-backend:$COMMIT_SHA'
