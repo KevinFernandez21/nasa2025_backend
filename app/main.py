@@ -6,6 +6,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import Settings, get_settings
 from app.dependencies import get_document_service, shutdown_document_service
@@ -35,6 +36,15 @@ app = FastAPI(
     version="0.1.0",
     description="API para buscar papers en Weaviate y generar títulos sugeridos",
     lifespan=lifespan,
+)
+
+# Configurar CORS para permitir requests desde el frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción, especificar dominios específicos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

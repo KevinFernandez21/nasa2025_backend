@@ -2,6 +2,8 @@
 
 API backend para el proyecto NASA Bioscience 2025. Proporciona endpoints para búsqueda semántica de documentos científicos, generación de títulos con IA y consultas a grafos de conocimiento en Neo4j.
 
+[![Deploy to Cloud Run](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
+
 ## Características
 
 - 🔍 **Búsqueda semántica** de papers científicos usando Weaviate
@@ -9,6 +11,8 @@ API backend para el proyecto NASA Bioscience 2025. Proporciona endpoints para b�
 - 📊 **Consultas a grafos** de conocimiento con Neo4j
 - 🐳 **Docker** listo para despliegue
 - ☁️ **Google Cloud Run** compatible
+- 📚 **OpenAPI/Swagger** documentación interactiva
+- 🔐 **Secret Manager** para credenciales seguras
 
 ## Endpoints
 
@@ -42,13 +46,22 @@ Obtiene datos del grafo de Neo4j
 }
 ```
 
-## Instalación y Desarrollo Local
+## 🚀 Inicio Rápido
 
-### Requisitos
+### Opción 1: Script Automático
+```bash
+git clone git@github.com:KevinFernandez21/nasa2025_backend.git
+cd nasa2025_backend
+./setup.sh
+```
+
+### Opción 2: Manual
+
+#### Requisitos
 - Python 3.12+
 - Docker (opcional)
 
-### Configuración
+#### Configuración
 
 1. Clonar el repositorio:
 ```bash
@@ -59,11 +72,10 @@ cd nasa2025_backend
 2. Crear archivo `.env` basado en `.env.example`:
 ```bash
 cp .env.example .env
+# Editar .env con tus credenciales
 ```
 
-3. Configurar las variables de entorno en `.env`
-
-### Ejecutar localmente
+3. Ejecutar localmente
 
 **Con Python:**
 ```bash
@@ -76,7 +88,10 @@ uvicorn app.main:app --reload --port 8080
 docker-compose up --build
 ```
 
-La API estará disponible en `http://localhost:8080`
+La API estará disponible en:
+- **API:** `http://localhost:8080`
+- **Docs (Swagger):** `http://localhost:8080/docs`
+- **ReDoc:** `http://localhost:8080/redoc`
 
 ## Despliegue en Google Cloud Run
 
@@ -189,6 +204,12 @@ Ver logs en Cloud Run:
 gcloud run services logs read nasa-backend --region us-central1
 ```
 
+## 📚 Documentación Completa
+
+- **[API_REFERENCE.md](API_REFERENCE.md)** - Documentación detallada de todos los endpoints
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Guía completa de despliegue en Google Cloud
+- **[COMMANDS.md](COMMANDS.md)** - Referencia rápida de comandos útiles
+
 ## Troubleshooting
 
 ### Error de conexión a Neo4j
@@ -203,6 +224,22 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --role="roles/secretmanager.secretAccessor"
 ```
 
-## Licencia
+## 🤝 Contribuir
+
+Las contribuciones son bienvenidas! Por favor:
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📝 Licencia
 
 MIT
+
+## 🔗 Enlaces Útiles
+
+- [Repositorio GitHub](https://github.com/KevinFernandez21/nasa2025_backend)
+- [Neo4j Aura Console](https://console.neo4j.io)
+- [Google Cloud Console](https://console.cloud.google.com)
+- [FastAPI Documentation](https://fastapi.tiangolo.com)
